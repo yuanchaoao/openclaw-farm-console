@@ -4,6 +4,8 @@
 
 下载完整源码 ZIP 并解压，或克隆仓库。源码包含管理台、所有 adapter/MCP/文件桥程序、安装入口、依赖锁、示例和文档。安装过程在线获取官方依赖，源码包不预装第三方二进制，不依赖特定聊天软件安装目录。
 
+macOS/Linux 的 shell 安装入口还需要 curl 或 wget、tar，以及 shasum 或 sha256sum，用于下载、解包和 SHA-256 校验。
+
 使用 shell/PowerShell 安装入口获取本应用所需环境：
 
 ~~~sh
