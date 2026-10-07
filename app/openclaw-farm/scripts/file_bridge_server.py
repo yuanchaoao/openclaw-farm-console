@@ -440,8 +440,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("X-Request-ID", request_id)
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(body)
+        # Finish operation bookkeeping before the client can consume the whole
+        # response and start its next request. HTTP thread cleanup is not work.
         self._audit(request_id, status, path)
+        self._release_worker_slot()
+        self.wfile.write(body)
+
+    def _release_worker_slot(self) -> None:
+        if getattr(self, "_worker_slot_acquired", False):
+            self._worker_slot_acquired = False
+            self.bridge.worker_slots.release()
 
     def _error(self, error: BridgeError, request_id: str, path: str = "") -> None:
         self._json(error.status, {"ok": False, "error": {"code": error.code, "message": error.safe_message}, "request_id": request_id}, request_id, path)
@@ -517,8 +525,8 @@ class Handler(BaseHTTPRequestHandler):
     def _dispatch(self) -> tuple[int, str]:
         request_id = self._request_id()
         path_for_audit = ""
-        acquired = self.bridge.worker_slots.acquire(blocking=False)
-        if not acquired:
+        self._worker_slot_acquired = self.bridge.worker_slots.acquire(blocking=False)
+        if not self._worker_slot_acquired:
             error = BridgeError(503, "busy", "bridge concurrency limit reached")
             self._error(error, request_id)
             return error.status, ""
@@ -565,7 +573,7 @@ class Handler(BaseHTTPRequestHandler):
             self._error(error, request_id, path_for_audit)
             return 500, path_for_audit
         finally:
-            self.bridge.worker_slots.release()
+            self._release_worker_slot()
 
     def _handle_get(self, route: str, query: dict[str, list[str]], request_id: str) -> tuple[int, str]:
         self._authenticate("read")
@@ -635,6 +643,9 @@ class Handler(BaseHTTPRequestHandler):
             if status == 206:
                 self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
             self.send_header("X-Request-ID", request_id)
+            if length == 0:
+                self._audit(request_id, status, relative.as_posix())
+                self._release_worker_slot()
             self.end_headers()
             with path.open("rb") as handle:
                 handle.seek(start)
@@ -643,9 +654,13 @@ class Handler(BaseHTTPRequestHandler):
                     chunk = handle.read(min(1024 * 1024, remaining))
                     if not chunk:
                         break
-                    self.wfile.write(chunk)
                     remaining -= len(chunk)
-            self._audit(request_id, status, relative.as_posix())
+                    if remaining == 0:
+                        self._audit(request_id, status, relative.as_posix())
+                        self._release_worker_slot()
+                    self.wfile.write(chunk)
+            if remaining:
+                self._audit(request_id, status, relative.as_posix())
             return status, relative.as_posix()
         match = re.fullmatch(r"/v1/uploads/([0-9a-f]{32})", route)
         if match:

@@ -34,7 +34,7 @@ TOKEN = "bridge-test-token-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 class RunningBridge:
-    def __init__(self, base: Path, *, write: bool = True, delete: bool = True) -> None:
+    def __init__(self, base: Path, *, write: bool = True, delete: bool = True, workers: int = 4) -> None:
         self.root = base / "workspace"
         self.root.mkdir(parents=True)
         self.state = base / "state"
@@ -61,7 +61,7 @@ class RunningBridge:
             max_download_bytes=64 * 1024 * 1024,
             max_file_bytes=64 * 1024 * 1024,
             max_entries=100,
-            max_workers=4,
+            max_workers=workers,
             socket_timeout=10.0,
         )
         settings = server_module.build_settings(args)
@@ -180,6 +180,78 @@ class FileBridgeTests(unittest.TestCase):
         )
         self.assertEqual(farm.bridge_read("ins_test", self.bridge.record, "note.txt"), "second")
         self.assertTrue(second["backup"])
+
+    def test_completed_response_releases_worker_before_handler_cleanup(self) -> None:
+        self.bridge.close()
+        self.bridge = RunningBridge(self.base / "single-worker", workers=1)
+        response_sent = threading.Event()
+        allow_cleanup = threading.Event()
+        cleanup_finished = threading.Event()
+        original_json = server_module.Handler._json
+
+        def delayed_cleanup(handler, status, payload, request_id, path=""):
+            original_json(handler, status, payload, request_id, path)
+            if path == "first.txt":
+                response_sent.set()
+                allow_cleanup.wait(5)
+                cleanup_finished.set()
+
+        try:
+            with mock.patch.object(server_module.Handler, "_json", delayed_cleanup):
+                first = farm.bridge_write("ins_test", self.bridge.record, "first.txt", "first")
+                self.assertEqual(first["size"], 5)
+                self.assertTrue(response_sent.wait(5))
+                # The response is complete but its HTTP handler has not returned.
+                second = farm.bridge_write("ins_test", self.bridge.record, "second.txt", "second")
+                self.assertEqual(second["size"], 6)
+                self.assertEqual(farm.bridge_read("ins_test", self.bridge.record, "second.txt"), "second")
+        finally:
+            allow_cleanup.set()
+            self.assertTrue(cleanup_finished.wait(5))
+
+    def test_unfinished_audit_still_counts_toward_worker_limit(self) -> None:
+        self.bridge.close()
+        self.bridge = RunningBridge(self.base / "single-worker", workers=1)
+        audit_started = threading.Event()
+        allow_audit = threading.Event()
+        client_finished = threading.Event()
+        errors = []
+        original_audit = server_module.Handler._audit
+
+        def delayed_audit(handler, request_id, status, path=""):
+            if path == "held.txt":
+                audit_started.set()
+                allow_audit.wait(5)
+            original_audit(handler, request_id, status, path)
+
+        def write():
+            try:
+                farm.bridge_write("ins_test", self.bridge.record, "held.txt", "held")
+            except Exception as exc:
+                errors.append(exc)
+            finally:
+                client_finished.set()
+
+        with mock.patch.object(server_module.Handler, "_audit", delayed_audit):
+            writer = threading.Thread(target=write)
+            writer.start()
+            try:
+                self.assertTrue(audit_started.wait(5))
+                self.assertFalse(client_finished.is_set())
+                request = urllib.request.Request(
+                    f"http://127.0.0.1:{self.bridge.port}/v1/health",
+                    headers={"X-OpenClaw-Token": TOKEN},
+                )
+                with self.assertRaises(urllib.error.HTTPError) as caught:
+                    urllib.request.urlopen(request, timeout=5)
+                self.assertEqual(caught.exception.code, 503)
+                self.assertEqual(json.loads(caught.exception.read())["error"]["code"], "busy")
+            finally:
+                allow_audit.set()
+                writer.join(5)
+            self.assertFalse(writer.is_alive())
+            self.assertFalse(errors)
+        self.assertEqual(farm.bridge_write("ins_test", self.bridge.record, "next.txt", "next")["size"], 4)
 
     def test_resumable_upload_download_and_mutations(self) -> None:
         local = self.base / "payload.bin"

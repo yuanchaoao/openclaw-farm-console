@@ -1009,7 +1009,7 @@ async function installBridgeViaMcp(body, onProgress = () => {}, resumeInstall = 
     onProgress(['正在传送并校验文件桥程序','正在保存当前电脑的文件桥授权','正在准备反向隧道公钥','正在启动文件桥并验证实例本地服务'][step],{stage:'bridge_install',installStep:step,installStepCount:stagedInstall.commands.length});
     for(let attempt=0;attempt<3;attempt++){
     const attemptNumber=attempt+(resumeInstall && step===resumeInstall.startStep?resumeInstall.startAttempt:0);
-    const downloadNote=process.env.OPENCLAW_FILE_BRIDGE_INSTALL_MODE==='r2'?'下载文件名固定为 file_bridge_server-4a20282d5ff26635.py，文件名仅用16位短哈希，禁止将校验用的64位SHA256补进下载文件名。':'';
+    const downloadNote=process.env.OPENCLAW_FILE_BRIDGE_INSTALL_MODE==='r2'?'下载文件名固定为 file_bridge_server-528fbe4a989ca80a.py，文件名仅用16位短哈希，禁止将校验用的64位SHA256补进下载文件名。':'';
     const stepPrompt=`维护任务编号：${taskTag}\n本次执行编号：${taskTag}-${step}-${attemptNumber}\n本次仅执行第 ${step+1}/${stagedInstall.commands.length} 步。使用 exec，不要传 host 参数。下面是已确认的安装命令，请逐字原样执行。${downloadNote}批准后仅返回工具结果，不继续其他步骤。\n${stagedInstall.commands[step]}`;
     const approvalRequestId=await sendMaintenance(stepPrompt,`bridge-install-${instance.id}-${taskTag}-step-${step}-attempt-${attemptNumber}`);
     if(approvalRequestId)return {instanceId:instance.id,stage:'approval_required',requestId:approvalRequestId,maintenanceSession,message:'本次安装需要核验远端权限'};

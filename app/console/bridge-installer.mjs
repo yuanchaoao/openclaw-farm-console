@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 
 const BUNDLED_BRIDGE = new URL("../openclaw-farm/scripts/file_bridge_server.py", import.meta.url);
-export const EXPECTED_SHA256 = "4a20282d5ff266353ec703964d34db0d21805a9a85835f56dab6ea6d5145a353";
+export const EXPECTED_SHA256 = "528fbe4a989ca80ab90592a917e1fe8a7a22c16108c3a4c9469ce03b15a5b50f";
 export const DEFAULT_BRIDGE_URL = "";
 const shellQuote = value => "'" + value.replaceAll("'", "'\\''") + "'";
 

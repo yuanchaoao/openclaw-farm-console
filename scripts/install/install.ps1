@@ -1,5 +1,6 @@
 # No administrator rights or preinstalled Python/Node required.
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'windows_runtime.ps1')
 $env:PYTHONUTF8 = '1'
 $taskUtf8 = New-Object System.Text.UTF8Encoding($false)
 [Console]::OutputEncoding = $taskUtf8
@@ -38,8 +39,8 @@ try {
             try { Invoke-WebRequest -UseBasicParsing -Uri $taskUrl -OutFile $taskArchive -TimeoutSec 1200; break }
             catch { if ($taskAttempt -eq 2) { throw }; Start-Sleep -Seconds 2 }
         }
-        if ((Get-FileHash $taskArchive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $taskSha) { throw 'Runtime checksum mismatch. Download was not executed.' }
-        Expand-Archive -LiteralPath $taskArchive -DestinationPath $taskWork
+        if ((Get-TaskFileSha256 -Path $taskArchive) -ne $taskSha) { throw 'Runtime checksum mismatch. Download was not executed.' }
+        Expand-TaskRuntimeZip -ArchivePath $taskArchive -DestinationPath $taskWork
         $taskBinary = @(Get-ChildItem -LiteralPath $taskWork -Recurse -Filter uv.exe)
         if ($taskBinary.Count -ne 1) { throw 'Invalid runtime archive.' }
         Copy-Item -LiteralPath $taskBinary[0].FullName -Destination $taskUv -Force

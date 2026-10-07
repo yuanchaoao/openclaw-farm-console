@@ -6,11 +6,12 @@
 
 | 场景 | 当前公开文档状态 | 完成需要的证据 |
 |---|---|---|
-| macOS ARM64 隔离安装 | 本发行版完整原生门禁通过 | 已保存中文/空格路径、安装、17 MCP 工具、启动/停止/升级/卸载与保留数据报告 |
-| macOS Intel 全新安装 | 原生 CI 待验证 | 官方依赖获取、原生钥匙串、完整生命周期 |
-| Linux x64 桌面全新安装 | 原生 CI 待验证 | 依赖获取、用户 Secret Service、前台/后台控制 |
+| macOS ARM64 隔离安装 | 本机完整原生门禁通过；首次 GitHub CI 并发回归失败，修复复验中 | 本机报告已保存；最终发行提交仍需对应 CI 完整报告 |
+| macOS Intel 全新安装 | 首次 macOS 15 Intel 原生 CI 通过 | 已取得首次提交报告；最终发行提交需对应完整报告 |
+| Linux x64 桌面全新安装 | 首次 Ubuntu 24.04 x64 原生 CI 通过 | CI Secret Service 与完整生命周期已验；具体用户桌面仍按实际环境核验 |
 | Linux ARM64 桌面全新安装 | 待实机记录 | 原生依赖获取、用户 Secret Service、完整生命周期 |
-| Windows 10/11 x64 全新安装 | 原生 CI 待验证 | 在线依赖获取、OpenSSH、凭据管理器、生命周期与路径 |
+| Windows Server 2022 x64 原生 CI | 首次安装器模块缺失，修复复验中 | 修复后的同提交完整原生门禁报告 |
+| Windows 10/11 x64 全新安装 | 待具体桌面环境验证 | 在线依赖获取、OpenSSH、凭据管理器、生命周期与路径；Server CI 不能代替全部桌面版本验收 |
 | Windows 11 ARM64 全新安装 | 待实机记录 | x64 模拟 Python、原生 ARM64 Node、凭据管理器与生命周期 |
 | WorkBuddy stdio MCP 接入 | 待具体客户端版本验证 | 客户端启动服务、17 工具发现、真实只读调用 |
 | Responses 自动设备配对 | 已提供条件化实现；待用户远端逐实例验收 | 对应实例完整申请/设备 ID、原权限、同一客户端真实 Gateway 连通；夹具和 HTTP 接受不等于验通 |
@@ -36,18 +37,20 @@ python scripts/ci_native.py
 
 2026-10-07 本机 macOS ARM64 完整中文/空格路径原生门禁已通过，保存了 before-upgrade.json、after-upgrade.json 和 native-summary.json。升级前报告于 08:58:46 UTC 完成 9 项检查；升级后报告于 09:05:11 UTC 完成 11 项检查，包括安装身份、配置/任务与原生凭据保留及凭据删除。汇总报告确认公开安装入口、升级、卸载和保留用户数据均通过，39 个 JavaScript 测试文件执行完成。页面资源、自定义端口、17 工具发现、打开页面、停止/重启及未验证中继不会伪造配置完成，也已实际核验。
 
-上述是本机原生结果，尚未取得 GitHub CI 的通过证据。GitHub 原生 CI 配置包括 macOS ARM64、macOS Intel、Windows x64 与 Linux x64；配置存在不等于检查已通过。Windows、Linux、macOS Intel 及其他未运行环境保持待验证。
+上述是本机原生结果。首次 GitHub CI 已取得 Linux x64 与 macOS Intel 的完整通过证据；Windows 安装器模块缺失及 macOS ARM64 并发回归失败正在修复复验。首次结果不能预先证明待推送的修复或最终发行提交已通过。
 
 ## 发行 CI 记录位置
 
-下表供完成对应原生门禁后填写实际记录；当前均未取得本次 GitHub CI 的通过证据。记录必须指向同一发行提交，并保留 Actions run 链接与 acceptance-* 制品中的原始 JSON。部分步骤通过、取消或超时不能填写为整套通过。
+首次实际记录为提交 40f6245 的 [Actions run 37599631279](https://github.com/yuanchaoao/openclaw-farm-console/actions/runs/37599631279)。下表只记录该次已取得的结果；修复后的结果须由新的实际记录更新。部分步骤通过、取消或超时不能填写为整套通过。
 
 | 原生 CI 平台 | 发行提交 / Actions run | 实际结果 / 证据制品 |
 |---|---|---|
-| macOS ARM64 | 待记录 | 待验证；acceptance-macos-arm64 |
-| macOS Intel | 待记录 | 待验证；acceptance-macos-x64 |
-| Windows x64 | 待记录 | 待验证；acceptance-windows-x64 |
-| Linux x64 | 待记录 | 待验证；acceptance-linux-x64 |
+| macOS ARM64（macos-15） | 40f6245 / 37599631279 | 并发回归失败，修复复验中；尚无整套通过报告 |
+| macOS Intel（macos-15-intel） | 40f6245 / 37599631279 | 通过；acceptance-macos-x64 / native-summary.json |
+| Windows x64（windows-2022） | 40f6245 / 37599631279 | 安装器模块缺失，修复复验中；尚无整套通过报告 |
+| Linux x64（ubuntu-24.04） | 40f6245 / 37599631279 | 通过；acceptance-linux-x64 / native-summary.json |
+
+最终发行能力以 Release 附件中对应同一发行提交的四份 native-summary.json 为准，并保留对应 Actions run 与各平台原始阶段报告。首次两平台通过、本机 Mac 通过或已写好修复，均不能代替最终提交的四平台验收。
 
 Linux ARM64 与 Windows 11 ARM64 不在上述 CI 矩阵中，仍需各自真实机器验收。CI 的 Windows Server runner 通过，也不能单独证明全部 Windows 10/11 桌面环境均已验证。
 
