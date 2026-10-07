@@ -1,0 +1,15 @@
+{
+  "consolePort": 4317,
+  "relay": {
+    "host": "relay.example.invalid",
+    "user": "relayuser",
+    "sshPort": 22,
+    "identityFile": "/ABSOLUTE/PRIVATE/PATH/openclaw_farm_relay",
+    "portRange": [19900, 20080]
+  },
+  "bridge": {
+    "podPort": 18081,
+    "workspace": "/workspace"
+  },
+  "setupComplete": false
+}

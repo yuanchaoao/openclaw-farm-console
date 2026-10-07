@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openclaw-farm": {
+      "command": "C:\\ABSOLUTE\\INSTALL\\PATH\\runtime\\python\\Scripts\\python.exe",
+      "args": ["C:\\ABSOLUTE\\INSTALL\\PATH\\control.py", "mcp"]
+    }
+  }
+}

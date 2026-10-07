@@ -1,0 +1,48 @@
+name: Native installation acceptance
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: linux-x64
+          - runner: windows-2022
+            platform: windows-x64
+          - runner: macos-15
+            platform: macos-arm64
+          - runner: macos-15-intel
+            platform: macos-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare a desktop Secret Service on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y gnome-keyring dbus-x11 libsecret-tools openssh-client
+      - name: Install, test, upgrade and uninstall on Linux
+        if: runner.os == 'Linux'
+        run: |
+          dbus-run-session -- sh -c 'printf "%s" "isolated-ci-keyring" | gnome-keyring-daemon --unlock --components=secrets >/dev/null; python scripts/ci_native.py'
+      - name: Install, test, upgrade and uninstall on macOS / Windows
+        if: runner.os != 'Linux'
+        run: python scripts/ci_native.py
+      - name: Save native acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-${{ matrix.platform }}
+          path: reports/*.json
+          if-no-files-found: warn

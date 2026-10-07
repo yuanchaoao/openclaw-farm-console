@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e85d36" />
+    <title>OpenClaw Farm Console</title>
+    <meta name="description" content="通过 Codex 管理已注册的 OpenClaw 实例、文件桥和 MCP。" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <main class="shell">
+      <aside class="instance-panel">
+        <header class="brand">
+          <div class="brand-mark">OC</div>
+          <div>
+            <p class="eyebrow">CODEX OPERATIONS</p>
+            <h1>OpenClaw Farm</h1>
+          </div>
+        </header>
+
+        <div class="fleet-summary">
+          <div>
+            <span id="active-count">0</span>
+            <small>在线实例</small>
+          </div>
+          <div>
+            <span id="bridge-count">0</span>
+            <small>文件桥</small>
+          </div>
+          <div>
+            <span id="attention-count">0</span>
+            <small>待处理</small>
+          </div>
+        </div>
+
+        <div class="panel-label">
+          <span>实例会话</span>
+          <button id="refresh-button" class="icon-button" type="button" aria-label="刷新实例">↻</button>
+        </div>
+        <nav id="instance-list" class="instance-list" aria-label="OpenClaw 实例"></nav>
+
+        <footer class="rail-footer">
+          <span class="pulse-dot"></span>
+          <span>本机 Codex · 省额度模式</span>
+        </footer>
+      </aside>
+
+      <section class="chat-stage">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">CURRENT INSTANCE</p>
+            <div class="instance-title-row">
+              <h2 id="current-instance">正在载入...</h2>
+              <button id="rename-button" class="rename-button" type="button">改备注</button>
+              <span id="current-status" class="status-pill">检查中</span>
+            </div>
+            <div class="instance-meta-row">
+              <span id="current-instance-id"></span>
+              <span id="thread-turns" class="turn-count">0 轮</span>
+            </div>
+            <form id="rename-form" class="rename-form" hidden>
+              <input id="rename-input" maxlength="40" placeholder="例如：小卡编辑部" />
+              <button type="submit">保存</button>
+              <button id="rename-cancel" type="button">取消</button>
+            </form>
+          </div>
+          <div class="header-actions">
+            <button id="connection-button" class="connection-button" type="button">连接中心</button>
+            <a id="open-console" class="ghost-button" href="#" target="_blank" rel="noreferrer">原控制台</a>
+            <button id="reset-button" class="ghost-button" type="button">新建会话</button>
+          </div>
+        </header>
+
+        <div id="chat-feed" class="chat-feed" aria-live="polite"></div>
+
+        <div class="quick-actions" aria-label="快捷操作">
+          <button type="button" data-action="instance_status">检查连接</button>
+          <button type="button" data-action="file_list">查看文件</button>
+          <button type="button" data-action="gateway_sessions">Gateway 会话</button>
+          <button type="button" data-prompt="只读查看当前实例最近的运行状态和错误，给出最短结论。">最近异常</button>
+        </div>
+
+        <form id="composer" class="composer">
+          <textarea id="message-input" rows="1" placeholder="告诉 Codex 要对这个实例做什么..." autocomplete="off"></textarea>
+          <div class="composer-footer">
+            <label class="write-permission">
+              <input id="allow-write" type="checkbox" checked />
+              <span class="toggle"></span>
+              <span>持续授权写操作</span>
+            </label>
+            <div class="send-area">
+              <span class="shortcut">Ctrl ↵</span>
+              <button id="send-button" class="send-button" type="submit">发送给 Codex</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="operations-panel">
+        <div class="ops-heading">
+          <p class="eyebrow">INSTANCE CONTEXT</p>
+          <h3>操作面板</h3>
+        </div>
+
+        <section class="ops-card bridge-card">
+          <div class="ops-card-top">
+            <span class="ops-icon">FB</span>
+            <span id="bridge-status" class="mini-status">未检查</span>
+          </div>
+          <h4>文件桥</h4>
+          <p id="bridge-detail">读取、上传和同步工作区文件。</p>
+          <button type="button" data-action="bridge_health">检查文件桥</button>
+          <button id="open-file-manager" type="button">文件管理（增删改查）</button>
+        </section>
+
+        <section class="ops-card mcp-card">
+          <div class="ops-card-top">
+            <span class="ops-icon">MCP</span>
+            <span class="mini-status neutral">完整权限</span>
+          </div>
+          <h4>MCP 控制</h4>
+          <p>MCP 在线时由 Codex 使用完整管理权限直接控制。</p>
+          <button type="button" data-action="gateway_sessions">查看 Gateway 会话</button>
+          <button id="open-mcp-setup" type="button">配置 / 修复 MCP</button>
+        </section>
+
+        <section class="safety-card">
+          <p class="eyebrow">EFFICIENCY MODE</p>
+          <h4>持续全权限 · 效率优先</h4>
+          <p>读写删除默认持续授权；首次完整配对批准后长期复用。固定检查仍不消耗 Codex 额度。</p>
+        </section>
+
+        <div class="activity-log">
+          <div class="panel-label"><span>本次活动</span></div>
+          <div id="activity-items" class="activity-items">
+            <p class="empty-activity">等待第一条操作</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="connection-modal" class="connection-modal" hidden>
+      <section class="connection-dialog" role="dialog" aria-modal="true" aria-labelledby="connection-title">
+        <header class="connection-header">
+          <div>
+            <p class="eyebrow">OPENCLAW SETUP</p>
+            <h3 id="connection-title">连接中心</h3>
+          </div>
+          <button id="connection-close" class="connection-close" type="button" aria-label="关闭连接中心">×</button>
+        </header>
+
+        <div class="connection-grid">
+          <form id="register-instance-form" class="connection-card">
+            <span class="step-number">01</span>
+            <h4>注册实例</h4>
+            <p>链接和 Token 只传给本机，Token 会进入系统密钥库。</p>
+            <label>实例链接<input name="url" type="url" required placeholder="https://your-openclaw.example/ins_example/chat" /></label>
+            <label>Token<input name="token" type="password" required minlength="20" autocomplete="new-password" placeholder="sk-openclaw-..." /></label>
+            <label>备注名<input name="name" maxlength="40" placeholder="例如：内容审核智能体" /></label>
+            <label class="connection-check"><input name="replace" type="checkbox" /> 更新已登记实例的凭据</label>
+            <button type="submit">注册并检查</button>
+            <output class="connection-result" data-result="register"></output>
+          </form>
+
+          <form id="bridge-wizard-form" class="connection-card bridge-wizard-card">
+            <span class="step-number">03 · 备用</span>
+            <h4>文件桥备用接入</h4>
+            <p>自动流程无法完成时，可复制提示词继续。安装程序与一键安装共用新 R2 地址和校验值。</p>
+            <label>选择实例<select name="instanceId" data-instance-select required></select></label>
+            <label>文件桥 Token<input name="token" type="password" required minlength="20" autocomplete="new-password" /></label>
+            <button type="submit">生成下载与启动提示词</button>
+            <output class="connection-result" data-result="bridge-wizard"></output>
+            <section id="bridge-wizard-step-two" class="bridge-wizard-step" hidden>
+              <label>第一段提示词<textarea id="bridge-first-prompt" readonly rows="8"></textarea></label>
+              <button id="copy-bridge-first" type="button" class="secondary-action">复制第一段</button>
+              <label>粘贴 OpenClaw 返回的 SSH 公钥<input id="bridge-public-key" name="publicKey" placeholder="ssh-ed25519 AAAA... openclaw-tunnel" /></label>
+              <label class="connection-check confirm-check"><input id="bridge-authorize-confirm" name="confirm" type="checkbox" /> 允许本次写入 中继服务器 公钥白名单</label>
+              <button id="bridge-authorize-button" type="button">授权并生成第二段</button>
+              <output class="connection-result" data-result="bridge-authorize"></output>
+            </section>
+            <section id="bridge-wizard-step-three" class="bridge-wizard-step" hidden>
+              <label>第二段提示词<textarea id="bridge-second-prompt" readonly rows="8"></textarea></label>
+              <button id="copy-bridge-second" type="button" class="secondary-action">复制第二段</button>
+              <p class="wizard-hint">粘贴到 OpenClaw 后，左侧文件桥绿灯会自动亮起。</p>
+            </section>
+            <section class="bridge-incident-panel" aria-labelledby="bridge-incident-title">
+              <div class="incident-heading">
+                <span class="incident-mark">!</span>
+                <div>
+                  <h5 id="bridge-incident-title">遇到意外情况？</h5>
+                  <p>把 OpenClaw 返回内容完整粘进来，本地判断，不消耗 Codex 额度。</p>
+                </div>
+              </div>
+              <textarea id="bridge-incident-input" rows="7" placeholder="例如：18081 连接被拒绝、端口已占用、文件被删除……"></textarea>
+              <button id="bridge-incident-analyze" type="button">免费快速判断</button>
+              <button id="bridge-incident-codex" type="button" class="incident-codex-button">交给 Codex 分析 · 消耗额度</button>
+              <output id="bridge-incident-result" class="incident-result">等待粘贴异常信息。</output>
+              <div class="incident-actions">
+                <button id="bridge-incident-first" type="button">重新生成初始化提示词</button>
+                <button id="bridge-incident-repair" type="button">生成自愈提示词</button>
+              </div>
+            </section>
+          </form>
+
+          <form id="bridge-batch-form" class="connection-card bridge-batch-card">
+            <span class="step-number">批量</span>
+            <h4>批量接入文件桥</h4>
+            <p>勾选多个实例，第一段和第二段都可以同时在多个 OpenClaw 中执行。</p>
+            <div id="bridge-batch-instances" class="batch-instance-list"></div>
+            <label class="connection-check confirm-check"><input name="confirm" type="checkbox" /> 确认批量生成并登记独立文件桥凭据</label>
+            <button type="submit">批量生成第一段</button>
+            <output class="connection-result" data-result="bridge-batch"></output>
+            <section id="bridge-batch-prompts" class="batch-prompts" hidden></section>
+            <label id="bridge-batch-authorize-confirm-row" class="connection-check confirm-check" hidden><input id="bridge-batch-authorize-confirm" type="checkbox" /> 允许本次批量写入 中继服务器 公钥白名单</label>
+            <button id="bridge-batch-authorize" type="button" hidden>批量授权并生成第二段</button>
+            <output class="connection-result" data-result="bridge-batch-authorize"></output>
+          </form>
+
+          <form id="bridge-connection-form" class="connection-card compact-connection-card">
+            <span class="step-number">高级</span>
+            <h4>仅登记已有文件桥</h4>
+            <p>已有可访问地址时使用，不负责建立隧道。</p>
+            <label>选择实例<select name="instanceId" data-instance-select required></select></label>
+            <label>文件桥地址<input name="baseUrl" type="url" required placeholder="http://127.0.0.1:20080" /></label>
+            <label>文件桥 Token<input name="token" type="password" required minlength="20" autocomplete="new-password" /></label>
+            <input name="workspace" type="hidden" value="/home/node/.openclaw/workspace" />
+            <label class="connection-check"><input name="replace" type="checkbox" /> 更新已有文件桥凭据</label>
+            <button type="submit">仅保存登记</button>
+            <output class="connection-result" data-result="bridge"></output>
+          </form>
+
+          <form id="mcp-connection-form" class="connection-card mcp-connection-card">
+            <span class="step-number">02 · 推荐</span>
+            <h4>MCP 配置与修复</h4>
+            <p>先配置并验通 MCP；在线后再通过 MCP 一键安装文件桥，固定操作不消耗 Codex 额度。</p>
+            <label>选择实例<select name="instanceId" data-instance-select required></select></label>
+            <button id="mcp-check-button" class="secondary-action" type="button">只读检查 MCP · 0 额度</button>
+            <button id="mcp-codex-help" class="secondary-action codex-help-action" type="button">配置 / 修复 MCP（Codex）· 消耗额度</button>
+            <label class="connection-check confirm-check"><input name="confirm" type="checkbox" /> 允许本次通过 MCP 安装并启动文件桥</label>
+            <button type="submit">MCP 在线后，一键安装文件桥 · 0 额度</button>
+            <output class="connection-result" data-result="mcp"></output>
+          </form>
+        </div>
+
+        <p class="connection-footnote">推荐顺序：注册实例 → 配置 MCP → MCP 一键安装文件桥；R2 复制提示词仅作兜底。</p>
+      </section>
+    </div>
+
+    <template id="instance-template">
+      <button class="instance-card" type="button">
+        <span class="instance-avatar"></span>
+        <span class="instance-copy">
+          <strong></strong>
+          <small></small>
+        </span>
+        <span class="instance-state"></span>
+      </button>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+    <script src="/local-status.js"></script>
+</body>
+</html>

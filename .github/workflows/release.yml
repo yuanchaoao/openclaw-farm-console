@@ -1,0 +1,54 @@
+name: Validate and publish release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    uses: ./.github/workflows/ci.yml
+  package:
+    needs: acceptance
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          path: reports
+          pattern: acceptance-*
+      - name: Build complete source and installer archives
+        run: python scripts/build_release.py
+      - name: Collect verified platform evidence
+        run: |
+          python - <<'PY'
+          import json, pathlib, zipfile
+          reports = pathlib.Path('reports')
+          summaries = list(reports.glob('*/native-summary.json'))
+          assert len(summaries) == 4 and all(json.loads(p.read_text())['passed'] for p in summaries)
+          with zipfile.ZipFile('dist/native-acceptance-reports.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+              for p in sorted(reports.rglob('*.json')): archive.write(p, p.relative_to(reports))
+          PY
+      - name: Publish only after every native gate passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(python -c 'import json; print(json.load(open("dist/release-manifest.json"))["version"])')
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "This version is already released. Bump control.py VERSION before publishing another version."
+            exit 0
+          fi
+          cat > /tmp/release-notes.md <<'EOF'
+          Complete source and installers for macOS Apple silicon / Intel, Windows x64 and desktop Linux x64.
+
+          Native CI validates installation in Chinese / space paths, custom port, native credentials, the 17 MCP tools, configuration-preserving upgrade, restart and uninstall. Isolated fixtures validate Gateway recovery and real file-bridge HTTP read/write/delete and chunk integrity. Production cloud credentials and servers are user supplied; no production instance is changed by CI.
+
+          Download the archive for your platform, extract it and follow README.md. SHA256SUMS covers the three platform installation archives. Native acceptance reports are attached separately.
+          EOF
+          gh release create "v$VERSION" dist/* --target "$GITHUB_SHA" --title "OpenClaw Farm Console $VERSION" --notes-file /tmp/release-notes.md

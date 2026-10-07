@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "openclaw-farm": {
+      "command": "/ABSOLUTE/INSTALL/PATH/runtime/python/bin/python",
+      "args": ["/ABSOLUTE/INSTALL/PATH/control.py", "mcp"]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "openclaw-farm-client-runtime",
+  "private": true,
+  "type": "module",
+  "dependencies": { "openclaw": "2026.4.2" },
+  "overrides": { "osc-progress": "0.3.0" }
+}

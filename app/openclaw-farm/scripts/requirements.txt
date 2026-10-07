@@ -1,0 +1,2 @@
+# Locked desktop runtimes; system-specific dependencies carry markers.
+-r ../../../scripts/requirements-lock.txt

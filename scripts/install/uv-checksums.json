@@ -1,0 +1,8 @@
+{
+  "uv-aarch64-apple-darwin.tar.gz": "3f61099e261e449527141dbf125629fab33ad696468c8c90cebbac40185a306c",
+  "uv-x86_64-apple-darwin.tar.gz": "76638fdcfa91357858771551a1c88de1f7c3b270b33ab1866f8a0618d9e442d8",
+  "uv-x86_64-pc-windows-msvc.zip": "5049375aa2a5162f132b2c1cb992e25d42d47d934cab8c174dbe6f60973dcc12",
+  "uv-aarch64-pc-windows-msvc.zip": "dbb3a5bd06d20c9ab8bb9a79c7c4fb5832ca1c7ba5f231a020bc92e5a3c6dcf4",
+  "uv-x86_64-unknown-linux-musl.tar.gz": "06b891ef144bd8390fecb150838f0ff8a34ccaeecf9d744d97945d02ec7389c0",
+  "uv-aarch64-unknown-linux-musl.tar.gz": "3cb3c891f56891f0027f0287980014930b18875c9396c1d8a19d607b0a6049d9"
+}

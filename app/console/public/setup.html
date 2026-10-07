@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>首次配置 · OpenClaw Farm</title><link rel="stylesheet" href="/connections.css"><link rel="stylesheet" href="/setup.css"></head>
+<body><main class="setup-shell">
+<a class="back" href="/connections.html">← 连接工作台</a><p class="eyebrow">OPENCLAW FARM</p><h1>首次配置</h1>
+<p>选择自己的 Linux 中继服务器，登记首个 OpenClaw 实例，即可使用一键连接流程。普通配置保存在本机用户目录，Token 保存在系统密钥库。</p>
+<form id="setupForm" class="register-card">
+<h2>1 · 本机与中继</h2><div class="form-grid">
+<label>管理台端口<input id="consolePort" type="number" min="1024" max="65535" required></label>
+<label>中继主机<input id="relayHost" placeholder="relay.example.com" required autocomplete="off"></label>
+<label>SSH 用户<input id="relayUser" placeholder="服务器上的登录账户" required autocomplete="off"></label>
+<label>SSH 端口<input id="sshPort" type="number" min="1" max="65535" required></label>
+<label class="wide">本机 SSH 私钥路径<input id="identityFile" required autocomplete="off"><small>可填写已有私钥的绝对路径，也可在下一步生成专用密钥。</small></label>
+<label>转发端口起点<input id="portMin" type="number" min="1024" max="65535" required></label>
+<label>转发端口终点<input id="portMax" type="number" min="1024" max="65535" required></label>
+<label>实例文件桥端口<input id="podPort" type="number" min="1024" max="65535" required></label>
+<label>实例工作区<input id="workspace" required autocomplete="off"><small>填写实例实际的 Linux 绝对路径。</small></label>
+</div>
+<h2>首个实例（可选）</h2><div class="form-grid">
+<label class="wide">实例 / Gateway 链接<input id="initialUrl" type="url" placeholder="https://your-openclaw.example/ins_example/chat" autocomplete="off"></label>
+<label>Gateway Token<input id="initialToken" type="password" autocomplete="off" placeholder="仅提交到本机系统密钥库"></label>
+<label>数字名称<input id="initialName" value="1" maxlength="40"><small>数字名称可批量操作；命名实例每次需单独授权。</small></label>
+</div><button class="primary" type="submit">保存配置</button></form>
+<section class="register-card"><h2>2 · 准备 SSH 密钥与授权</h2>
+<p>中继需要 OpenSSH 服务和 Python 3。先使用发布包的 <code>relay/prepare.sh</code> 检查所选账户的转发配置，再在中继服务器上登记本机公钥。文件桥监听始终保持回环，无需对外开放转发端口。</p>
+<button id="createKey" class="secondary" disabled>生成专用密钥 / 读取已有公钥</button><button id="showAuthorization" class="ghost" disabled>生成中继授权命令</button>
+<label class="wide">公钥<input id="publicKey" readonly autocomplete="off"></label>
+<div id="authorizationBox" hidden><p>登录所选中继的 SSH 账户，将以下命令粘贴到它的终端执行。脚本会备份授权文件并保留其他公钥；只允许本机转发到配置范围内的回环端口。</p><textarea id="authorizationScript" readonly rows="10" spellcheck="false"></textarea><button id="copyAuthorization" class="ghost">复制授权命令</button></div>
+</section>
+<section class="register-card"><h2>3 · 验证并开始</h2><p>验证会实际连接所选服务器。每个实例仍由一键流程检查远端文件桥、反向隧道、本地转发及文件读写删除。</p><button id="checkRelay" class="secondary" disabled>检查 SSH 登录与中继</button><button id="finishSetup" class="primary" disabled>完成配置，打开连接工作台</button></section>
+<p id="setupStatus" role="status" aria-live="polite"></p>
+</main><script type="module" src="/setup.js"></script></body></html>

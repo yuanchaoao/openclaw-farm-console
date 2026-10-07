@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenClaw Farm"
+  short_description: "管理自己的OpenClaw实例、SSH中继与文件操作"
+  default_prompt: "使用 $openclaw-farm 核对当前实例与授权范围，通过实际下游证据完成连接、任务或文件操作。"

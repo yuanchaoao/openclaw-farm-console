@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../console/public/connections.js',import.meta.url),'utf8');
+test('inline editor replaces only selected instance, retains masked drafts and checks captured instance',async()=>{
+ const elements=new Map();const $=id=>{if(!elements.has(id))elements.set(id,{value:'',classList:{toggle(){}},addEventListener(event,handler){this[event]=handler;}});return elements.get(id);};
+ const calls=[],checks=[];let release;
+ const state={selectedId:'ins_a',instances:[{id:'ins_a',name:'A',webUrl:'https://example.com/ins_a/chat'},{id:'ins_b',name:'B',webUrl:'https://example.com/ins_b/chat'}]};
+ const context=vm.createContext({state,$,Map,Set,api:async(path,body)=>{calls.push(JSON.parse(body.body));await new Promise(r=>release=r);},checkMcp:async id=>checks.push(id),setInstanceResult(){}});
+ vm.runInContext(source.slice(source.indexOf('// Keep drafts only'),source.indexOf('$("registerButton").addEventListener')),context);
+ vm.runInContext('syncTokenEditor()',context);
+ const token='test-token-123456789012345';$('tokenEditValue').value=token;$('tokenEditValue').input();
+ const pending=$('tokenEditForm').submit({preventDefault(){}});
+ state.selectedId='ins_b';vm.runInContext('syncTokenEditor()',context);assert.equal($('tokenEditValue').value,'');
+ release();await pending;
+ assert.equal(calls[0].replace,true);assert.equal(calls[0].url,state.instances[0].webUrl);assert.deepEqual(checks,['ins_a']);
+ state.selectedId='ins_a';vm.runInContext('syncTokenEditor()',context);assert.equal($('tokenEditValue').value,token);assert.equal($('tokenEditSave').disabled,false);
+ const html=readFileSync(new URL('../console/public/connections.html',import.meta.url),'utf8');assert.match(html,/id="tokenEditValue" type="password"/);
+});

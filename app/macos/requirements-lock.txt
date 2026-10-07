@@ -1,0 +1,2 @@
+# Compatibility entry point: cross-platform marker/hash lock.
+-r ../../scripts/requirements-lock.txt

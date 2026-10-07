@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenClaw 连接工作台</title>
+  <link rel="stylesheet" href="/connections.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="back" href="/">← 返回管理台</a>
+      <p class="eyebrow">OPENCLAW SETUP</p>
+      <h1>连接<br>工作台</h1>
+      <p class="lede">不靠对话猜步骤。登记、MCP、文件桥和隧道按固定流程执行。</p>
+      <div class="quota-note"><span></span> 固定操作不消耗 Codex 额度</div>
+      <div class="instance-title">已登记实例</div>
+      <div id="instanceList" class="instance-list"></div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CONNECTION PIPELINE</p>
+          <h2>从 MCP 到文件桥，一条线完成</h2>
+        </div>
+        <button id="refreshButton" class="ghost">刷新状态</button>
+      </header>
+
+      <section class="register-card batch-card">
+        <h3>批量配置 MCP 和文件桥</h3>
+        <p id="batchSpeed" class="speed-badge">速度优先 · 同时配置 100 个实例</p>
+        <p id="batchCapacity">逐行显示实时检查结果、安装进度和待处理事项。批量操作只使用数字名称实例；命名实例默认受保护。</p>
+        <div class="batch-metrics" aria-label="批量配置实时统计">
+          <div><strong id="batchCount-running">0</strong><span>运行</span></div>
+          <div><strong id="batchCount-queued">0</strong><span>排队</span></div>
+          <div><strong id="batchCount-pending">0</strong><span>待处理</span></div>
+          <div><strong id="batchCount-complete">0</strong><span>完成</span></div>
+        </div>
+        <div class="batch-toolbar">
+          <button id="batchAdd" class="ghost">添加实例</button>
+          <button id="batchLoad" class="ghost">加入已登记实例</button>
+          <label>同时配置 <select id="batchLimit"><option>10</option><option>20</option><option>50</option><option selected>100</option></select> 个</label>
+        </div>
+        <details><summary>一次粘贴多个实例</summary>
+          <p>每行：实例链接 | Gateway Token | 备注名</p>
+          <textarea id="batchPaste" rows="3" autocomplete="off" placeholder="https://…/ins_xxx/chat | Token | 备注"></textarea>
+          <button id="batchImport" class="ghost">加入列表</button>
+        </details>
+        <button id="batchCopyAll" class="ghost" disabled>复制全部待处理提示词</button>
+        <textarea id="batchCopyFallback" hidden readonly rows="8" aria-label="待复制的批量提示词"></textarea>
+        <div class="batch-table-wrap"><table class="batch-table"><thead><tr><th><input id="batchAll" type="checkbox" checked aria-label="全选实例"></th><th>实例 / Token</th><th>MCP</th><th>文件桥</th><th>进度与操作</th></tr></thead><tbody id="batchRows"></tbody></table></div>
+        <div class="safety-box">
+          <label class="check"><input id="batchShared" type="checkbox" checked> 允许所选实例使用共享工作区读写兼容模式</label>
+          <label class="check"><input id="batchDelete" type="checkbox" checked> 启用文件删除能力</label>
+          <label class="check"><input id="batchReplace" type="checkbox" checked> 使用新填 Token 更新已登记凭据</label>
+        </div>
+        <div class="batch-toolbar"><button id="batchCheck" class="secondary">检查所选状态</button><button id="batchStart" class="primary">一键安装 / 修复所选文件桥</button></div>
+        <p>已有连接自动复用；中断时恢复已完成的步骤和独立隧道，最后验证文件读写。每个实例单独显示结果。</p>
+        <p id="batchSummary" role="status" aria-live="polite"></p>
+        <p id="batchNotice" role="status"></p>
+        <p>填好实例链接和完整 Token 后自动保存到系统密钥库；显示“已保存”后刷新无需重填。已启动的文件桥任务可继续跟踪。</p>
+      </section>
+
+      <section class="register-card">
+        <div class="section-number">01</div>
+        <div class="section-copy">
+          <h3>登记或更新实例</h3>
+          <p>Token 直接进入本机系统密钥库，不发送给浏览器聊天。</p>
+        </div>
+        <div class="form-grid">
+          <label class="wide">实例链接<input id="instanceUrl" placeholder="https://your-openclaw.example/ins_example/chat"></label>
+          <label>Gateway Token<input id="gatewayToken" type="password" autocomplete="off" placeholder="粘贴 Gateway Token"></label>
+          <label>备注名<input id="instanceName" maxlength="40" placeholder="例如：刀刀漫画"></label>
+          <label class="check wide"><input id="replaceCredential" type="checkbox" checked> 更新已登记实例的凭据</label>
+          <button id="registerButton" class="primary wide">登记并检查 MCP</button>
+        </div>
+      </section>
+
+      <section class="pipeline-card">
+        <div class="pipeline-head">
+          <div>
+            <div class="section-number">02</div>
+            <h3 id="selectedTitle">选择一个实例</h3>
+            <p id="selectedId">左侧选择后开始固定流程</p>
+          </div>
+          <div class="live-lights">
+            <div><i id="mcpLight"></i><span>MCP</span></div>
+            <div><i id="bridgeLight"></i><span>文件桥</span></div>
+            <span id="statusFreshness"></span>
+          </div>
+        </div>
+
+        <ol class="steps">
+          <li id="stepRegistry" class="active"><b>1</b><div><strong>凭据登记</strong><span>系统密钥库中存在控制凭据</span></div></li>
+          <li id="stepMcp"><b>2</b><div><strong>MCP / Gateway</strong><span>直接检查，不创建 Codex 会话</span></div></li>
+          <li id="stepBridge"><b>3</b><div><strong>文件桥</strong><span>已有服务直接复用；安装使用主 agent 独立会话，空转时主动结束并从当前步骤重试</span></div></li>
+          <li id="stepTunnel"><b>4</b><div><strong>安全隧道</strong><span>安装自检后自动执行：Pod → 中继服务器 反向隧道，再连接 电脑本地转发</span></div></li>
+        </ol>
+
+        <div class="action-zone">
+
+          <div class="safety-box">
+            <label class="check"><input id="allowShared" type="checkbox" checked> 允许当前实例使用共享工作区读写兼容模式</label>
+            <label class="check"><input id="enableDelete" type="checkbox" checked> 启用文件删除能力</label>
+            <label id="namedInstanceAuthorizationRow" class="check" hidden><input id="allowNamedInstance" type="checkbox"> 我明确授权本次单独调用这个受保护的命名实例（勾选后自动核验并显示配对提示词）</label>
+            <label id="namedPermissionAuthorizationRow" class="check" hidden><input id="allowInternalPermissionRepair" type="checkbox"> 我明确授权仅为当前命名实例的本次文件桥任务核验并补齐内部执行客户端权限：管理、读取、写入、审批、配对</label>
+            <button id="namedPairingPromptButton" class="ghost" type="button" hidden>核验、生成并复制配对提示词</button>
+          </div>
+          <button id="installBridgeButton" class="primary" disabled>一键安装文件桥</button>
+          <button id="restartBridgeButton" class="ghost" type="button" hidden>复查后重新建立安装任务</button>
+        </div>
+
+        <div id="approvalBox" class="approval hidden">
+          <strong>需要一次远端权限批准</strong>
+          <p id="approvalText"></p>
+          <textarea id="approvalPrompt" readonly></textarea>
+          <div class="row"><button id="copyApprovalButton" class="ghost">复制批准提示词</button><button id="resumeButton" class="primary">已批准，继续配置</button></div>
+        </div>
+
+        <div id="execApprovalBox" class="approval hidden">
+          <strong>通过 MCP 处理执行批准</strong>
+          <p id="execApprovalStatus">正在批准本次已确认的安装命令，随后自动继续原维护会话。</p>
+          <details><summary>本次批准信息</summary><p id="execApprovalSession"></p><pre id="execApprovalRequest"></pre></details>
+        </div>
+        <div id="resultBox" class="result" aria-live="polite">选择实例后，这里会显示每一步的中文结果。</div>
+        <details class="connection-tools"><summary>连接设置与诊断</summary>
+          <p class="muted">恢复顺序：MCP → 远端文件桥 → 中继服务器 反向隧道 → 电脑本地转发 → 真实读写删除验证。迁移中继后，旧端口即使仍在监听也会核对目标服务器；确认属于本实例后才替换旧转发。</p>
+          <button id="remoteApprovalHelpButton" hidden class="ghost" type="button">复制远端审批修复说明</button>
+          <textarea id="remoteApprovalHelpText" readonly hidden rows="9" aria-label="远端审批修复说明"></textarea>
+          <button id="checkMcpButton" class="secondary" disabled>单独检查 MCP</button>
+        <form id="tokenEditForm" class="safety-box hidden">
+          <h3>修改当前实例的 Gateway Token</h3>
+          <p id="tokenEditTarget"></p>
+          <label>新的 Gateway Token<input id="tokenEditValue" type="password" autocomplete="off" minlength="20" maxlength="512" required placeholder="在这里粘贴此实例当前的 Token"></label>
+          <p>保存会更新此实例的凭据并重新检查连接。输入内容保持遮挡，不会自动清空。</p>
+          <button id="tokenEditSave" type="submit" class="primary">保存并重新连接</button>
+          <p id="tokenEditStatus" role="status" aria-live="polite"></p>
+        </form>
+        </details>
+      </section>
+
+      <section class="help-card">
+        <div><p class="eyebrow">OPTIONAL</p><h3>固定流程失败了？</h3><p>先显示原始中文结论。只有你主动点击时，才让 Codex 解释和给修复建议。</p></div>
+        <button id="codexHelpButton" class="ghost" disabled>请 Codex 帮助（消耗额度）</button>
+        <pre id="codexAnswer" class="hidden"></pre>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/batch-connections.js"></script>
+  <script src="/connections.js?v=20260910-reinstall1"></script>
+  <script src="/local-status.js"></script>
+</body>
+</html>

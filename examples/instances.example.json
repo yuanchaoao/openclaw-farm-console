@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "default": null,
+  "instances": {
+    "ins_demo01": {
+      "id": "ins_demo01",
+      "name": "1",
+      "status": "pending_credential",
+      "host": "gateway.example.invalid",
+      "gateway_url": "wss://gateway.example.invalid/ins_demo01/",
+      "web_url": "https://gateway.example.invalid/ins_demo01/chat",
+      "control_adapter": "openclaw-sdk-least-privilege",
+      "credential_ref": {
+        "backend": "secret-service",
+        "attributes": {"service": "openclaw-farm", "instance": "ins_demo01"}
+      },
+      "file_bridge": {
+        "status": "configured_unverified",
+        "transport": "ssh_relay",
+        "base_url": "http://127.0.0.1:20080",
+        "workspace": "/workspace",
+        "local_host": "127.0.0.1",
+        "local_port": 20080,
+        "pod_port": 18081,
+        "relay_host": "relay.example.invalid",
+        "relay_user": "relayuser",
+        "relay_ssh_port": 22,
+        "relay_port": 20080,
+        "relay_key": "/ABSOLUTE/PRIVATE/PATH/openclaw_farm_relay",
+        "version": "2"
+      }
+    }
+  }
+}
