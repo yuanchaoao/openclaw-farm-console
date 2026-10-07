@@ -26,4 +26,4 @@
 
 文档与源程序修改后必须重新生成最终归档；上述源码清单检查不能代替最终归档哈希与成员复核。各平台原生执行证据单独记录在 [验证说明](validation.md)，本审计不宣称尚未运行的 CI 已通过。
 
-已只读核对 2026-10-07 本机 macOS ARM64 的三份最终原生报告：before-upgrade.json 的 9 项检查、after-upgrade.json 的 11 项检查均通过；native-summary.json 确认公开安装入口、升级、卸载、保留用户数据和 39 个 JavaScript 测试文件完成。此结果限于原生本机安装与隔离夹具，不代表生产实例、中继或其他操作系统已验通。GitHub 四平台 CI 尚待取得实际记录。
+已只读核对 2026-10-07 本机 macOS ARM64 的三份原生报告：before-upgrade.json 的 9 项检查、after-upgrade.json 的 11 项检查均通过；native-summary.json 确认公开安装入口、升级、卸载、保留用户数据和 39 个 JavaScript 测试文件完成。此历史结果限于原生本机安装与隔离夹具，不代表生产实例、中继或最终发行提交已验通。首次 GitHub CI 的 Linux x64 与 macOS Intel 通过，Windows 与 macOS ARM64 失败记录保留在 [验证说明](validation.md)。本次按用户要求停止验收并直接发布，最终发行提交的完整原生验收未完成，不宣称修复后的 Windows 或 macOS ARM64 已通过。
