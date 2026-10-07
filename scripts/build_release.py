@@ -73,7 +73,7 @@ def build(output):
     (output / 'release-manifest.json').write_text(json.dumps({
         'version': v, 'sourceFileCount': len(files), 'archives': sums,
         'runtime': {'node': '22.14.0', 'python': '3.12.10', 'openclaw': '2026.4.2'},
-        'validation': 'See the native CI acceptance reports attached to this release.',
+        'validation': 'Final native acceptance was not completed at the owner\'s request. See docs/validation.md for actual earlier results; platform support is not fully verified.',
     }, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({'version': v, 'files': len(files), 'assets': list(sums)}, ensure_ascii=False))
 
@@ -82,4 +82,3 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, default=ROOT / 'dist')
     build(parser.parse_args().output)
-
