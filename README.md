@@ -36,7 +36,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install/install.ps1
 - 默认批量处理显示名称为纯数字的实例。命名实例需要本次任务明确授权，不能通过批量选择静默扩围。
 - 文件上传以分块偏移恢复，下载以部分文件恢复，最终校验字节数和 SHA-256；覆盖要求当前远端文件哈希。
 - 恢复先验证下游实际状态，只补失效的一层。迟到的维护回执、监听端口或日志标记不能单独判定成功或失败。
-- 同一源码提供 macOS、Linux、Windows 安装与前台控制入口；各平台的完整环境与实机验收状态见 [验证说明](docs/validation.md)。
+- 同一源码提供 macOS、Linux、Windows 安装与前台控制入口。本次按用户要求发布，未完成最终发行提交的完整原生验证；历史通过结果不代表修复后的 Windows 或 macOS ARM64 已通过。各平台的实际证据见 [验证说明](docs/validation.md)。
 
 ## MCP 客户端
 

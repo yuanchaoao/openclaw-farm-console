@@ -2,15 +2,17 @@
 
 平台实现、静态检查、自动化测试和用户环境端到端验收是不同证据。本页不以历史环境结果为公开发行版保证，也不根据 README 宣称测试通过。
 
+本次按用户要求发布，不再继续原生验收，最终发行提交的完整原生验证未完成。发布打包成功不代表各平台安装通过；下列已取得结果仅作为历史证据，修复后的 Windows 与 macOS ARM64 未取得最终通过结论。
+
 ## 当前验收矩阵
 
 | 场景 | 当前公开文档状态 | 完成需要的证据 |
 |---|---|---|
-| macOS ARM64 隔离安装 | 本机完整原生门禁通过；首次 GitHub CI 并发回归失败，修复复验中 | 本机报告已保存；最终发行提交仍需对应 CI 完整报告 |
-| macOS Intel 全新安装 | 首次 macOS 15 Intel 原生 CI 通过 | 已取得首次提交报告；最终发行提交需对应完整报告 |
-| Linux x64 桌面全新安装 | 首次 Ubuntu 24.04 x64 原生 CI 通过 | CI Secret Service 与完整生命周期已验；具体用户桌面仍按实际环境核验 |
+| macOS ARM64 隔离安装 | 本机完整原生门禁通过；首次 GitHub CI 并发回归失败，修复后最终验证未完成 | 已有结果限于相应历史提交，不能证明最终发行提交通过 |
+| macOS Intel 全新安装 | 首次 macOS 15 Intel 原生 CI 通过；最终发行提交未完成验证 | 已有结果限于首次提交 |
+| Linux x64 桌面全新安装 | 首次 Ubuntu 24.04 x64 原生 CI 通过；最终发行提交未完成验证 | 已有结果限于首次提交及 CI 环境 |
 | Linux ARM64 桌面全新安装 | 待实机记录 | 原生依赖获取、用户 Secret Service、完整生命周期 |
-| Windows Server 2022 x64 原生 CI | 首次安装器模块缺失，修复复验中 | 修复后的同提交完整原生门禁报告 |
+| Windows Server 2022 x64 原生 CI | 首次安装器模块缺失，修复后最终验证未完成 | 尚无修复后同提交完整通过报告 |
 | Windows 10/11 x64 全新安装 | 待具体桌面环境验证 | 在线依赖获取、OpenSSH、凭据管理器、生命周期与路径；Server CI 不能代替全部桌面版本验收 |
 | Windows 11 ARM64 全新安装 | 待实机记录 | x64 模拟 Python、原生 ARM64 Node、凭据管理器与生命周期 |
 | WorkBuddy stdio MCP 接入 | 待具体客户端版本验证 | 客户端启动服务、17 工具发现、真实只读调用 |
@@ -21,9 +23,9 @@
 
 自动化测试结果如已由本发行版执行，应在发行说明中列出精确命令、平台、时间与结果。未运行的检查保持“未运行/待验证”；不得将构建成功或服务 health 等同于远端文件验收。
 
-## 已取得的本发行版证据
+## 已取得的历史验证证据
 
-2026-10-07 在 macOS ARM64 使用安装器固定的 Node 22.14.0、Python 3.12 环境，最终执行 app/macos/test-*.mjs 的全部 39 个 JavaScript 测试文件，共 207 项通过，0 项失败、0 项跳过。测试使用隔离目录和合成 Gateway/实例/中继数据。
+2026-10-07 在 macOS ARM64 使用安装器固定的 Node 22.14.0、Python 3.12 环境，执行 app/macos/test-*.mjs 的全部 39 个 JavaScript 测试文件，共 207 项通过，0 项失败、0 项跳过。测试使用隔离目录和合成 Gateway/实例/中继数据。
 
 完整隔离原生检查的复现入口（启动入口使用 Python 3.12）：
 
@@ -37,20 +39,20 @@ python scripts/ci_native.py
 
 2026-10-07 本机 macOS ARM64 完整中文/空格路径原生门禁已通过，保存了 before-upgrade.json、after-upgrade.json 和 native-summary.json。升级前报告于 08:58:46 UTC 完成 9 项检查；升级后报告于 09:05:11 UTC 完成 11 项检查，包括安装身份、配置/任务与原生凭据保留及凭据删除。汇总报告确认公开安装入口、升级、卸载和保留用户数据均通过，39 个 JavaScript 测试文件执行完成。页面资源、自定义端口、17 工具发现、打开页面、停止/重启及未验证中继不会伪造配置完成，也已实际核验。
 
-上述是本机原生结果。首次 GitHub CI 已取得 Linux x64 与 macOS Intel 的完整通过证据；Windows 安装器模块缺失及 macOS ARM64 并发回归失败正在修复复验。首次结果不能预先证明待推送的修复或最终发行提交已通过。
+上述是本机原生结果。首次 GitHub CI 已取得 Linux x64 与 macOS Intel 的完整通过证据；Windows 安装器模块缺失及 macOS ARM64 并发回归失败后已进行修复，但未完成最终原生验证。首次结果不能证明修复或最终发行提交已通过。
 
 ## 发行 CI 记录位置
 
-首次实际记录为提交 40f6245 的 [Actions run 37599631279](https://github.com/yuanchaoao/openclaw-farm-console/actions/runs/37599631279)。下表只记录该次已取得的结果；修复后的结果须由新的实际记录更新。部分步骤通过、取消或超时不能填写为整套通过。
+首次实际记录为提交 40f6245 的 [Actions run 37599631279](https://github.com/yuanchaoao/openclaw-farm-console/actions/runs/37599631279)。下表只记录该次已取得的结果；本次发布不继续修复后的原生验收。部分步骤通过、取消或超时不能填写为整套通过。
 
 | 原生 CI 平台 | 发行提交 / Actions run | 实际结果 / 证据制品 |
 |---|---|---|
-| macOS ARM64（macos-15） | 40f6245 / 37599631279 | 并发回归失败，修复复验中；尚无整套通过报告 |
+| macOS ARM64（macos-15） | 40f6245 / 37599631279 | 并发回归失败；修复后的最终验证未完成 |
 | macOS Intel（macos-15-intel） | 40f6245 / 37599631279 | 通过；acceptance-macos-x64 / native-summary.json |
-| Windows x64（windows-2022） | 40f6245 / 37599631279 | 安装器模块缺失，修复复验中；尚无整套通过报告 |
+| Windows x64（windows-2022） | 40f6245 / 37599631279 | 安装器模块缺失；修复后的最终验证未完成 |
 | Linux x64（ubuntu-24.04） | 40f6245 / 37599631279 | 通过；acceptance-linux-x64 / native-summary.json |
 
-最终发行能力以 Release 附件中对应同一发行提交的四份 native-summary.json 为准，并保留对应 Actions run 与各平台原始阶段报告。首次两平台通过、本机 Mac 通过或已写好修复，均不能代替最终提交的四平台验收。
+本次发布不以四平台原生验收为发布门禁，也不宣称最终提交已有四份通过的 native-summary.json。Release 附件中的历史报告应按其实际提交、平台和结果解读；首次两平台通过、本机 Mac 通过或已写好修复，均不能代替最终提交的四平台验收。
 
 Linux ARM64 与 Windows 11 ARM64 不在上述 CI 矩阵中，仍需各自真实机器验收。CI 的 Windows Server runner 通过，也不能单独证明全部 Windows 10/11 桌面环境均已验证。
 
